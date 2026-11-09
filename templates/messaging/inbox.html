@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Сообщения | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1"><i class="bi bi-chat-dots-fill text-primary me-2"></i>Сообщения</h2>
+        <p class="text-muted mb-0">Ваши переписки с покупателями и продавцами</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            {% if conversations %}
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="list-group list-group-flush">
+                        {% for conv in conversations %}
+                            <a href="{% url 'messaging:conversation_detail' conv.pk %}" class="list-group-item list-group-item-action p-3 p-md-4 transition">
+                                <div class="d-flex align-items-center gap-3">
+                                    <!-- Item thumbnail -->
+                                    <div class="flex-shrink-0">
+                                        {% if conv.item.image %}
+                                            <img src="{{ conv.item.image.url }}" alt="{{ conv.item.title }}" class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="bi bi-box-seam fs-4"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <h6 class="fw-bold mb-0 text-truncate">
+                                                {% if conv.buyer == user %}
+                                                    <span class="text-muted">Продавец:</span> {{ conv.seller.username }}
+                                                {% else %}
+                                                    <span class="text-muted">Покупатель:</span> {{ conv.buyer.username }}
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">{{ conv.updated_at|timesince }} назад</small>
+                                        </div>
+
+                                        <p class="mb-1 text-primary fw-semibold small text-truncate">
+                                            Товар: {{ conv.item.title }} (${{ conv.item.price }})
+                                        </p>
+
+                                        {% with last_msg=conv.messages.last %}
+                                            {% if last_msg %}
+                                                <p class="mb-0 text-muted small text-truncate">
+                                                    {% if last_msg.sender == user %}<strong>Вы:</strong> {% endif %}
+                                                    {{ last_msg.body }}
+                                                </p>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+
+                                    <!-- Badge -->
+                                    {% if conv.unread_count > 0 %}
+                                        <div class="flex-shrink-0">
+                                            <span class="badge rounded-pill bg-danger">{{ conv.unread_count }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm p-5 text-center rounded-4">
+                    <i class="bi bi-chat-square-text text-muted display-4 mb-3"></i>
+                    <h4 class="fw-bold">У вас нет активных диалогов</h4>
+                    <p class="text-muted">Когда вы напишете продавцу или кто-то напишет по поводу вашего товара, сообщения появятся здесь.</p>
+                    <div class="mt-2">
+                        <a href="{% url 'listings:item_list' %}" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-search me-1"></i>Найти товары
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

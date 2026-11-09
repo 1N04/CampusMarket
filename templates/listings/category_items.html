@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'listings:item_list' %}" class="text-decoration-none">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'listings:category_list' %}" class="text-decoration-none">Категории</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ category.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                {% if category.icon %}<i class="bi {{ category.icon }} me-2 text-primary"></i>{% endif %}
+                {{ category.name }}
+            </h2>
+            <p class="text-muted mb-0">Все активные объявления в этой категории</p>
+        </div>
+        <a href="{% url 'listings:item_create' %}" class="btn btn-primary fw-semibold">
+            <i class="bi bi-plus-lg me-1"></i>Продать в этой категории
+        </a>
+    </div>
+
+    {% if page_obj %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for item in page_obj %}
+                <div class="col">
+                    <div class="card card-item border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                        {% if item.image %}
+                            <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-thumbnail">
+                        {% else %}
+                            <div class="item-placeholder">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body p-3 d-flex flex-column">
+                            <span class="badge bg-secondary-subtle text-dark small mb-1 align-self-start">{{ item.get_condition_display }}</span>
+                            <h5 class="card-title fw-bold text-truncate mb-1">
+                                <a href="{{ item.get_absolute_url }}" class="text-dark text-decoration-none">{{ item.title }}</a>
+                            </h5>
+                            <div class="text-primary fw-bold fs-5 mb-2">${{ item.price }}</div>
+
+                            <div class="mt-auto border-top pt-2 d-flex justify-content-between text-muted small">
+                                <span><i class="bi bi-person me-1"></i>{{ item.seller.username }}</span>
+                                <span>{{ item.created_at|date:"d M" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="mt-5" aria-label="Пагинация">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперед</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="card border-0 shadow-sm p-5 text-center rounded-4">
+            <i class="bi bi-box-seam text-muted display-4 mb-3"></i>
+            <h4 class="fw-bold">В этой категории пока нет товаров</h4>
+            <p class="text-muted">Будьте первым, кто разместит объявление здесь!</p>
+            <div>
+                <a href="{% url 'listings:item_create' %}" class="btn btn-primary fw-semibold">
+                    <i class="bi bi-plus-circle me-1"></i>Разместить товар
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

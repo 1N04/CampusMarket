@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Диалог по {{ conversation.item.title }} | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <a href="{% url 'messaging:inbox' %}" class="btn btn-sm btn-outline-secondary mb-3">
+                <i class="bi bi-arrow-left me-1"></i>Назад ко всем сообщениям
+            </a>
+
+            <!-- Item summary card -->
+            <div class="card border-0 shadow-sm rounded-4 p-3 mb-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        {% if conversation.item.image %}
+                            <img src="{{ conversation.item.image.url }}" alt="{{ conversation.item.title }}" class="rounded-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                <i class="bi bi-box-seam fs-4"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-0">
+                                <a href="{{ conversation.item.get_absolute_url }}" class="text-dark text-decoration-none">
+                                    {{ conversation.item.title }}
+                                </a>
+                            </h6>
+                            <span class="text-primary fw-bold small">${{ conversation.item.price }}</span>
+                            <span class="badge bg-secondary-subtle text-dark small ms-2">{{ conversation.item.get_condition_display }}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-end small text-muted">
+                        <div>
+                            Собеседник:
+                            <strong>
+                                {% if conversation.buyer == user %}
+                                    {{ conversation.seller.username }} (Продавец)
+                                {% else %}
+                                    {{ conversation.buyer.username }} (Покупатель)
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat box -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-3">
+                <div class="card-body p-4" style="min-height: 380px; max-height: 520px; overflow-y: auto;" id="chatBody">
+                    {% for msg in messages_list %}
+                        <div class="d-flex flex-column mb-3">
+                            {% if msg.sender == user %}
+                                <div class="chat-bubble-sent shadow-sm">
+                                    {{ msg.body }}
+                                </div>
+                                <div class="text-end text-muted small mt-1 pe-2" style="font-size: 0.75rem;">
+                                    {{ msg.sent_at|date:"H:i, d M" }}
+                                    {% if msg.is_read %}
+                                        <i class="bi bi-check2-all text-primary ms-1" title="Прочитано"></i>
+                                    {% else %}
+                                        <i class="bi bi-check2 text-muted ms-1" title="Отправлено"></i>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="chat-bubble-received shadow-sm">
+                                    {{ msg.body }}
+                                </div>
+                                <div class="text-start text-muted small mt-1 ps-2" style="font-size: 0.75rem;">
+                                    {{ msg.sent_at|date:"H:i, d M" }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-chat-heart fs-1"></i>
+                            <p class="mt-2">Начните общение прямо сейчас!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Reply Form -->
+                <div class="card-footer bg-white border-top p-3">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            {{ form.body }}
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                <i class="bi bi-send-fill me-1"></i>Отправить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-scroll chat to bottom
+    const chatBody = document.getElementById('chatBody');
+    if (chatBody) {
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+</script>
+{% endblock %}

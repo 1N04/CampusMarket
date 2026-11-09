@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }} | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'listings:item_list' %}" class="text-decoration-none">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'listings:category' item.category.slug %}" class="text-decoration-none">{{ item.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ item.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Main Product Card & Image -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-100" style="max-height: 480px; object-fit: contain; background: #f8fafc;">
+                {% else %}
+                    <div class="item-placeholder" style="height: 350px;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                {% endif %}
+
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <div>
+                            <span class="badge bg-light text-secondary border me-1">{{ item.category.name }}</span>
+                            <span class="badge bg-secondary-subtle text-dark">{{ item.get_condition_display }}</span>
+                            {% if not item.is_available %}
+                                <span class="badge bg-danger ms-1">Продано</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-eye me-1"></i>{{ item.views_count }} просмотров
+                        </div>
+                    </div>
+
+                    <h2 class="fw-bold mb-3">{{ item.title }}</h2>
+
+                    <div class="text-primary fw-bold display-6 mb-4">
+                        {% if item.price == 0 %}
+                            <span class="text-success">Бесплатно (Даром)</span>
+                        {% else %}
+                            ${{ item.price }}
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-bold mb-2">Описание</h5>
+                    <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.7;">
+                        {{ item.description }}
+                    </div>
+
+                    <div class="border-top pt-3 text-muted small d-flex justify-content-between">
+                        <span>Опубликовано: {{ item.created_at|date:"d E Y, H:i" }}</span>
+                        <span>Обновлено: {{ item.updated_at|date:"d E Y, H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Seller & Actions -->
+        <div class="col-lg-4">
+            <!-- Actions for Owner -->
+            {% if user == item.seller %}
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white border-start border-4 border-primary">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-gear me-1"></i>Управление объявлением</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listings:item_edit' item.pk %}" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-pencil me-1"></i>Редактировать
+                        </a>
+                        <a href="{% url 'listings:item_toggle' item.pk %}" class="btn btn-outline-warning fw-semibold">
+                            {% if item.is_available %}
+                                <i class="bi bi-check-circle me-1"></i>Отметить как проданное
+                            {% else %}
+                                <i class="bi bi-arrow-repeat me-1"></i>Вернуть в продажу
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'listings:item_delete' item.pk %}" class="btn btn-outline-danger fw-semibold">
+                            <i class="bi bi-trash me-1"></i>Удалить объявление
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Seller Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <h5 class="fw-bold mb-3 text-start">Продавец</h5>
+                <div class="mb-3">
+                    {% if item.seller.profile_picture %}
+                        <img src="{{ item.seller.profile_picture.url }}" alt="{{ item.seller.username }}" class="avatar-lg shadow-sm border border-3 border-white">
+                    {% else %}
+                        <div class="mx-auto rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person fs-2"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="fw-bold mb-1">{{ item.seller.username }}</h5>
+
+                {% if item.seller.university %}
+                    <p class="text-muted small mb-2"><i class="bi bi-mortarboard me-1"></i>{{ item.seller.university }}</p>
+                {% endif %}
+
+                {% if item.seller.is_verified %}
+                    <div class="badge bg-success-subtle text-success py-1 px-2 mb-3">
+                        <i class="bi bi-patch-check-fill me-1"></i>Верифицированный профиль
+                    </div>
+                {% endif %}
+
+                {% if item.seller.bio %}
+                    <p class="text-muted small mb-3">{{ item.seller.bio|truncatewords:20 }}</p>
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    {% if user != item.seller %}
+                        <div class="d-grid mt-2">
+                            <a href="{% url 'messaging:start_conversation' item.pk %}" class="btn btn-primary fw-semibold py-2">
+                                <i class="bi bi-chat-dots-fill me-1"></i>Написать продавцу
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="d-grid mt-2">
+                        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-outline-primary fw-semibold">
+                            Войдите, чтобы написать продавцу
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Safety Tips -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mt-4 bg-light">
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-check text-success me-1"></i>Советы безопасности</h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-2">• Встречайтесь в публичных местах на кампусе (библиотека, столовая).</li>
+                    <li class="mb-2">• Проверяйте товар перед оплатой.</li>
+                    <li>• Не переводите предоплату незнакомым лицам.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

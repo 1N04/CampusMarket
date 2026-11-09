@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-tag-fill text-primary fs-3"></i>
+                        <h3 class="fw-bold mb-0">{{ title }}</h3>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">Отмена</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                {% if item %}Сохранить изменения{% else %}Опубликовать объявление{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная | CampusMarket{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-primary text-white py-5 mb-4 shadow-sm" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;">
+    <div class="container text-center py-3">
+        <h1 class="display-5 fw-bold mb-3">🎓 Университетский Маркетплейс</h1>
+        <p class="lead mb-4 mx-auto" style="max-width: 650px;">
+            Покупайте и продавайте учебники, технику, конспекты, мебель и вещи для кампуса напрямую среди студентов.
+        </p>
+
+        <!-- Quick Search -->
+        <form method="get" action="{% url 'listings:item_list' %}" class="row g-2 justify-content-center" style="max-width: 700px; margin: 0 auto;">
+            <div class="col-8 col-md-9">
+                <input type="text" name="query" value="{{ request.GET.query }}" class="form-control form-control-lg border-0 shadow" placeholder="Что ищете? Например: Учебник по математике, Наушники...">
+            </div>
+            <div class="col-4 col-md-3">
+                <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold shadow">
+                    <i class="bi bi-search me-1"></i>Найти
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 sticky-top" style="top: 80px; z-index: 10;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-funnel me-1 text-primary"></i>Фильтры</h5>
+                    {% if request.GET.query or request.GET.category or request.GET.condition or request.GET.min_price or request.GET.max_price %}
+                        <a href="{% url 'listings:item_list' %}" class="small text-decoration-none text-danger">Сбросить</a>
+                    {% endif %}
+                </div>
+
+                <form method="get">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Поиск по названию</label>
+                        {{ form.query }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Категория</label>
+                        {{ form.category }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Состояние</label>
+                        {{ form.condition }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">Цена ($)</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                {{ form.min_price }}
+                            </div>
+                            <div class="col-6">
+                                {{ form.max_price }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                        Применить
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Items Grid -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold mb-0">
+                    Объявления
+                    {% if page_obj.paginator.count %}
+                        <span class="badge bg-light text-secondary border fs-6 fw-normal ms-2">{{ page_obj.paginator.count }} найдено</span>
+                    {% endif %}
+                </h4>
+            </div>
+
+            {% if page_obj %}
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-4">
+                    {% for item in page_obj %}
+                        <div class="col">
+                            <div class="card card-item border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                                {% if item.image %}
+                                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-thumbnail">
+                                {% else %}
+                                    <div class="item-placeholder">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="badge bg-light text-secondary border small">{{ item.category.name }}</span>
+                                        <span class="badge bg-secondary-subtle text-dark small">{{ item.get_condition_display }}</span>
+                                    </div>
+
+                                    <h5 class="card-title fw-bold text-truncate mb-1 mt-1">
+                                        <a href="{{ item.get_absolute_url }}" class="text-dark text-decoration-none">{{ item.title }}</a>
+                                    </h5>
+
+                                    <div class="text-primary fw-bold fs-4 mb-2">
+                                        {% if item.price == 0 %}
+                                            <span class="text-success">Бесплатно</span>
+                                        {% else %}
+                                            ${{ item.price }}
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mt-auto border-top pt-2 d-flex justify-content-between align-items-center small text-muted">
+                                        <span class="text-truncate" style="max-width: 120px;">
+                                            <i class="bi bi-person me-1"></i>{{ item.seller.username }}
+                                        </span>
+                                        <span><i class="bi bi-clock me-1"></i>{{ item.created_at|timesince }} назад</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav class="mt-5" aria-label="Пагинация">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}">Назад</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">Назад</span></li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.condition %}&condition={{ request.GET.condition }}{% endif %}">Вперед</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">Вперед</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="card border-0 shadow-sm p-5 text-center rounded-4">
+                    <i class="bi bi-search text-muted display-4 mb-3"></i>
+                    <h4 class="fw-bold">Товаров не найдено</h4>
+                    <p class="text-muted">Попробуйте изменить параметры поиска или сбросить фильтры.</p>
+                    <div>
+                        <a href="{% url 'listings:item_list' %}" class="btn btn-outline-primary fw-semibold">Сбросить фильтры</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

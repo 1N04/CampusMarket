@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Профиль {{ user.username }} | CampusMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 text-center p-4">
+                <div class="mb-3">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="avatar-lg shadow-sm border border-3 border-white">
+                    {% else %}
+                        <div class="mx-auto rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                            <i class="bi bi-person fs-1"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                <p class="text-muted small mb-2">{{ user.email }}</p>
+                {% if user.university %}
+                    <span class="badge bg-secondary mb-3"><i class="bi bi-mortarboard me-1"></i>{{ user.university }}</span>
+                {% endif %}
+
+                {% if user.is_verified %}
+                    <div class="alert alert-success py-1 px-2 small mb-3">
+                        <i class="bi bi-patch-check-fill me-1"></i>Верифицированный студент
+                    </div>
+                {% endif %}
+
+                <p class="text-muted small">{{ user.bio|default:"Биография пока не заполнена." }}</p>
+
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'accounts:user_listings' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-box-seam me-1"></i>Мои объявления ({{ user.items.count }})
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3">Редактировать профиль</h4>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                                Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
